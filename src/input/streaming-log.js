@@ -2,7 +2,7 @@ const _ = require('lodash')
 const Client = require('streaming-log-client')
 const { Observable } = require('rxjs')
 
-const createStreamingLogInput = (_config) => {
+const createStreamingLogInput = (_config) => new Promise((resolve, reject) => {
   const providers = require('../..')
   const config = _.defaults(_config, {
     mode: 'string'
@@ -13,46 +13,49 @@ const createStreamingLogInput = (_config) => {
 
   const topics = config.topics ? config.topics.split(',') : [config.topic]
   const client = new Client(config.url)
-  const offsetQueue = []
-  return providers.state(config.state).then((state) => {
-    const currentState = state.initialState
-    const ret = Observable.from(topics)
-      .flatMap((topicName) => {
-        const defaultOffset = currentState[topicName] || 0
-        const beginOffset = Math.max(0,
-          config.offset && (config.offset[0] === '-' || config.offset[0] === '+')
-          ? defaultOffset + +config.offset
-          : config.offset ? +config.offset
-          : defaultOffset
-        )
-        return client.subscribe(topicName, {
-          retryOnError: config.retryOnError,
-          retryInterval: config.retryInterval,
-          encoding: config.encoding,
-          offset: beginOffset,
-          pollTimeout: config.pollTimeout,
-          requestTimeout: config.requestTimeout,
-          pageSize: config.pageSize
-        })
-          .map((message) => {
-            offsetQueue.push({topic: topicName, offset: message.offset})
-            return config.mode === 'object'
-            ? Object.assign({}, message, {topic: topicName})
-            : message.value
+  client.on('open', () => {
+    const offsetQueue = []
+    return providers.state(config.state).then((state) => {
+      const currentState = state.initialState
+      const ret = Observable.from(topics)
+        .flatMap((topicName) => {
+          const defaultOffset = currentState[topicName] || 0
+          const beginOffset = Math.max(0,
+            config.offset && (config.offset[0] === '-' || config.offset[0] === '+')
+            ? defaultOffset + +config.offset
+            : config.offset ? +config.offset
+            : defaultOffset
+          )
+          return client.subscribe(topicName, {
+            retryOnError: config.retryOnError,
+            retryInterval: config.retryInterval,
+            encoding: config.encoding,
+            offset: beginOffset,
+            pollTimeout: config.pollTimeout,
+            requestTimeout: config.requestTimeout,
+            pageSize: config.pageSize
           })
-      })
-    ret.acknowledge = () => {
-      if (!offsetQueue.length) {
-        console.error('More acks than inputs')
-        process.exit(1)
-      } else {
-        const offset = offsetQueue.shift()
-        currentState[offset.topic] = offset.offset + 1
-        state.put(currentState)
+            .map((message) => {
+              offsetQueue.push({topic: topicName, offset: message.offset})
+              return config.mode === 'object'
+              ? Object.assign({}, message, {topic: topicName})
+              : message.value
+            })
+        })
+      ret.acknowledge = () => {
+        if (!offsetQueue.length) {
+          console.error('More acks than inputs')
+          process.exit(1)
+        } else {
+          const offset = offsetQueue.shift()
+          currentState[offset.topic] = offset.offset + 1
+          state.put(currentState)
+        }
       }
-    }
-    return ret
+      resolve(ret)
+    })
   })
-}
+  client.on('error', (err) => reject(err))
+})
 
 module.exports = { createStreamingLogInput }
