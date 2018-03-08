@@ -1,4 +1,3 @@
-const pubSub = require('./output/pub-sub')
 const stdout = require('./output/stdout')
 const tcp = require('./output/tcp')
 const orientdb = require('./output/orientdb')
@@ -13,7 +12,6 @@ const output = (_config) => {
   })
   return new Promise((resolve, reject) =>
     !config ? reject('No output config given.')
-    : (config.driver === 'pubSub') ? resolve(pubSub(config))
     : (config.driver === 'stdout') ? resolve(stdout(config))
     : (config.driver === 'tcp') ? resolve(tcp(config))
     : (config.driver === 'orientdb') ? resolve(orientdb(config))
