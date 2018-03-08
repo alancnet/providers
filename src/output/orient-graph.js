@@ -160,7 +160,7 @@ const orientGraphOutput = (_config) => {
           if (!refs[val.in]) throw new Error(`Unable to find in reference: ${val.in}`)
           val.in = refs[val.in][RID];
         }
-        
+
         if (!val.in) throw new Error(`in reference has no @rid.`);
 
         if (upsert) {
@@ -176,11 +176,14 @@ const orientGraphOutput = (_config) => {
                 val[RID] = data[0][RID]
                 const update = _.omit(val, upsert, RID, 'in', 'out');
                 if (Object.keys(update).length) {
-                  /*TMP*/ console.info('Updating edge', JSON.stringify(update));
+                  /*TMP*/ console.info('Updating edge', JSON.stringify(update), Object.keys(update));
                   return db.update(data[0][RID])
                     .set(update)
                     .return('AFTER')
-                    .one();
+                    .one()
+                    .catch((er) => {console.error(er)
+process.exit(1);
+                    });
                 } else {
                   /*TMP*/ console.info('Nothing left to update on edge');
                   return Promise.resolve();
