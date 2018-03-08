@@ -47,39 +47,19 @@ const orientdbGremlin = (_config) => {
   function doQuery (query) {
     if (query instanceof Array) {
       return doQuery(gremlinTemplate.apply(null, arguments))
-    } else if (query instanceof Object) {
-      const grem =
-      // `SELECT gremlin(${
-      //   utils.encode(
-          // Flatten gremlin to one line:
-          query.gremlin
-            .split('\n')
-            .map((line) => line.trim())
-            .join(' ')
-        // )
-      // })`;
-      console.log(grem, JSON.stringify(query.bindings))
-      return db.query(
-        grem, {
-          language: 'gremlin',
-          class: 'com.orientechnologies.orient.graph.gremlin.OCommandGremlin'
-        // params: {
-        //   params: query.bindings
-        // }
-        })
     } else if (typeof query === 'string') {
       const grem = query.split('\n')
         .map((line) => line.trim())
         .join(' ')
 
-      console.log(grem)
+      const sql = `SELECT expand(gremlin(${utils.encode(grem)}))`
+      console.log(sql)
 
-      return db.query(
-        grem, {
-          language: 'gremlin',
-          class: 'com.orientechnologies.orient.graph.gremlin.OCommandGremlin'
-        }
-      )
+      return db.query(sql)
+      // .then((result) => {
+      //   if (result.length > 1) throw new Error('Expected one result from gremlin query')
+      //   return result[0].gremlin
+      // })
     }
   }
 
