@@ -79,7 +79,22 @@ const orientdbOutput = (_config) => {
           // return query.all()
         }
 
-        return Observable.create((observer) => {
+        const progressQueue = []
+
+        const acknowledge = () => {
+          if (!progressQueue.length) {
+            throw new Error('input.acknowledge() called more that inputs received.')
+          }
+
+          const progress = progressQueue.shift()
+
+          if (!state.progress || progress > state.progress) {
+            state.progress = progress
+          }
+          stateProvider.put(state)
+        }
+
+        const observable = Observable.create((observer) => {
           const cache = []
           var abort = false
           var onLiveRecord = (val) => cache.push(val)
@@ -103,10 +118,7 @@ const orientdbOutput = (_config) => {
 
           const onProgress = (val) => {
             const newProgress = val[config.incrementingField]
-            if (!state.progress || newProgress > state.progress) {
-              state.progress = val[config.incrementingField]
-            }
-            stateProvider.put(state)
+            progressQueue.push(newProgress)
           }
 
           const doInitial = (skip) =>
@@ -143,6 +155,10 @@ const orientdbOutput = (_config) => {
             liveQuery.close()
           }
         })
+
+        observable.acknowledge = acknowledge
+
+        return observable
       })
   })
 }

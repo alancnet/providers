@@ -1,5 +1,6 @@
 const _ = require('lodash')
 const { ODatabase } = require('orientjs')
+const { Subject } = require('rxjs')
 
 const CLASS = '@class'
 const REF = '@ref'
@@ -37,6 +38,7 @@ const orientGraphOutput = (_config) => {
   return db.class.list().then(() => {
     const refs = {}
     const queue = []
+    const done = new Subject()
 
     var processing = false
     var closed = false
@@ -45,10 +47,20 @@ const orientGraphOutput = (_config) => {
       if (queue.length) {
         if (processing) return
         processing = true
-        processItem(queue.shift())
+        const item = queue.shift()
+        processItem(item)
           .then(() => {
+            done.next(item)
             processing = false
             checkQueue()
+          })
+          .catch((err) => {
+            console.error(err)
+            Object.keys(err).forEach((key) =>
+              console.error(`${key}:`, err[key])
+            )
+            done.error(err)
+            process.exit(1)
           })
       } else if (closed) {
         db.close()
@@ -223,8 +235,8 @@ const orientGraphOutput = (_config) => {
         console.log('Completed')
         closed = true
         checkQueue()
-      }
-
+      },
+      done
     }
   })
 }

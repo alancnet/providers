@@ -14,9 +14,13 @@ const input = (config) => new Promise((resolve, reject) =>
     : stream
   )
 
-const jsonCodec = (stream) => stream.map((input) =>
-  typeof input === 'string' ? JSON.parse(input)
-  : input
-)
+const jsonCodec = (stream) => {
+  const ret = stream.map((input) =>
+    typeof input === 'string' ? JSON.parse(input)
+    : input
+  )
+  ret.acknowledge = stream.acknowledge
+  return ret
+}
 
 module.exports = input
