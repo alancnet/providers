@@ -2,6 +2,7 @@ const stdin = require('./input/stdin')
 const tcp = require('./input/tcp')
 const orientdb = require('./input/orientdb')
 const googlePubsub = require('./input/googlePubsub')
+const kafka = require('./input/kafka')
 
 const input = (config) => new Promise((resolve, reject) =>
   !config ? reject('No input config given.')
@@ -9,6 +10,7 @@ const input = (config) => new Promise((resolve, reject) =>
   : (config.driver === 'tcp') ? resolve(tcp(config))
   : (config.driver === 'orientdb') ? resolve(orientdb(config))
   : (config.driver === 'googlePubsub') ? resolve(googlePubsub(config))
+  : (config.driver === 'kafka') ? resolve(kafka(config))
   : reject(`Unknown input driver ${config.driver}`)
 )
   .then((stream) =>

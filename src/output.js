@@ -3,6 +3,7 @@ const tcp = require('./output/tcp')
 const orientdb = require('./output/orientdb')
 const orientGraph = require('./output/orient-graph')
 const clock = require('utc-clock')
+const kafka = require('./output/kafka')
 const _ = require('lodash')
 
 const output = (_config) => {
@@ -16,6 +17,7 @@ const output = (_config) => {
     : (config.driver === 'tcp') ? resolve(tcp(config))
     : (config.driver === 'orientdb') ? resolve(orientdb(config))
     : (config.driver === 'orient-graph') ? resolve(orientGraph(config))
+    : (config.driver === 'kafka') ? resolve(kafka(config))
     : reject(`Unknown output driver ${config.driver}`)
   )
   .then((observer) =>
