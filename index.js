@@ -6,4 +6,4 @@ module.exports = {
   state: require('./src/state'),
   gremlin: require('./src/gremlin'),
   orientdb: require('./src/orientdb')
-};
+}

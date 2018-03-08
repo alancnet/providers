@@ -1,6 +1,6 @@
-const googleCloudStorage = require('./storage/googleCloudStorage');
-const azureStorage = require('./storage/azureStorage');
-const file = require('./storage/file');
+const googleCloudStorage = require('./storage/googleCloudStorage')
+const azureStorage = require('./storage/azureStorage')
+const file = require('./storage/file')
 
 /**
  * @class Storage
@@ -38,12 +38,11 @@ const file = require('./storage/file');
   * @returns {Storage}
   */
 const storage = (config) => new Promise((resolve, reject) =>
-  !config ? reject('No storage config given.') :
-  config.driver === 'google' ? resolve(googleCloudStorage(config)) :
-  config.driver === 'minio' ? resolve(minioStorage(config)) :
-  config.driver === 'azure' ? resolve(azureStorage(config)) :
-  config.driver === 'file' ? resolve(file(config)) :
-  reject(`Unknown storage driver: ${config.driver}`)
-);
+  !config ? reject('No storage config given.')
+  : config.driver === 'google' ? resolve(googleCloudStorage(config))
+  : config.driver === 'azure' ? resolve(azureStorage(config))
+  : config.driver === 'file' ? resolve(file(config))
+  : reject(`Unknown storage driver: ${config.driver}`)
+)
 
-module.exports = storage;
+module.exports = storage

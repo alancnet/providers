@@ -1,18 +1,17 @@
-const _ = require('lodash');
-const { ODatabase, utils } = require('orientjs');
-const orientdbGremlin = require('./gremlin/orientdb');
+const _ = require('lodash')
+const { ODatabase } = require('orientjs')
+const orientdbGremlin = require('./gremlin/orientdb')
 
 const orientdbProvider = (_config) => {
   const config = _.defaults({}, _config, {
     port: 2424
-  });
+  })
 
-  if (!config.host) throw new Error('orientdb requires host');
-  if (!config.port) throw new Error('orientdb requires port');
-  if (!config.username) throw new Error('orientdb requires username');
-  if (!config.password) throw new Error('orientdb requires password');
-  if (!config.database) throw new Error('orientdb requires database');
-
+  if (!config.host) throw new Error('orientdb requires host')
+  if (!config.port) throw new Error('orientdb requires port')
+  if (!config.username) throw new Error('orientdb requires username')
+  if (!config.password) throw new Error('orientdb requires password')
+  if (!config.database) throw new Error('orientdb requires database')
 
   return orientdbGremlin(config).then((gremlin) => {
     var db = new ODatabase({
@@ -21,7 +20,7 @@ const orientdbProvider = (_config) => {
       username: config.username,
       password: config.password,
       name: config.database
-    });
+    })
     return Object.assign(db,
       {gremlin},
       {
@@ -32,12 +31,12 @@ const orientdbProvider = (_config) => {
               out: from,
               in: to
             },
-            extra||{}
+            extra || {}
           ))
           .all()
           .then((results) =>
-            results.length ? Promise.resolve(results[0]) :
-            db.create('EDGE', className)
+            results.length ? Promise.resolve(results[0])
+            : db.create('EDGE', className)
               .from(from)
               .to(to)
               .set(extra)
@@ -46,7 +45,7 @@ const orientdbProvider = (_config) => {
           )
       }
     )
-  });
+  })
 }
 
-module.exports = orientdbProvider;
+module.exports = orientdbProvider

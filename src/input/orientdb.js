@@ -1,9 +1,9 @@
-const _ = require('lodash');
-const { ODatabase, utils, RecordID } = require('orientjs');
-const { Observable } = require('rxjs');
+const _ = require('lodash')
+const { ODatabase, utils, RecordID } = require('orientjs')
+const { Observable } = require('rxjs')
 
 const orientdbOutput = (_config) => {
-  const providers = require('../..');
+  const providers = require('../..')
   const config = _.defaults({}, _config, {
     port: 2424,
     ensureClass: false,
@@ -12,26 +12,25 @@ const orientdbOutput = (_config) => {
       driver: 'file'
     },
     batchReadSize: 100
-  });
+  })
 
-  if (!config.host) throw new Error('orientdb requires host');
-  if (!config.port) throw new Error('orientdb requires port');
-  if (!config.username) throw new Error('orientdb requires username');
-  if (!config.password) throw new Error('orientdb requires password');
-  if (!config.database) throw new Error('orientdb requires database');
-  if (!config.class && !config.query) throw new Error('orientdb requires class or query');
+  if (!config.host) throw new Error('orientdb requires host')
+  if (!config.port) throw new Error('orientdb requires port')
+  if (!config.username) throw new Error('orientdb requires username')
+  if (!config.password) throw new Error('orientdb requires password')
+  if (!config.database) throw new Error('orientdb requires database')
+  if (!config.class && !config.query) throw new Error('orientdb requires class or query')
 
   const dummyState = {
-    get: function() { return this.state ? Promise.resolve(this.state) : Promise.reject('No state'); },
-    put: function(s) { this.state = s; return Promise.resolve(); }
-  };
+    get: function () { return this.state ? Promise.resolve(this.state) : Promise.reject('No state') },
+    put: function (s) { this.state = s; return Promise.resolve() }
+  }
 
   return (
-    config.state.name ?
-    providers.state(config.state) :
-    Promise.resolve(dummyState)
+    config.state.name
+    ? providers.state(config.state)
+    : Promise.resolve(dummyState)
   ).then((stateProvider) => {
-
     const db = new ODatabase({
       host: config.host,
       port: config.port,
@@ -39,16 +38,14 @@ const orientdbOutput = (_config) => {
       password: config.password,
       name: config.database,
       useToken: true
-    });
+    })
 
     db
       .open()
       .catch((err) => {
-        console.error(err);
-        process.exit(1);
+        console.error(err)
+        process.exit(1)
       })
-    ;
-
 
 // //TODO:
 //   1. Establish live query that writes to a buffer
@@ -60,7 +57,7 @@ const orientdbOutput = (_config) => {
     return stateProvider.get().catch(() => ({}))
       .then((state) => {
         const batchRead = (skip) => {
-          var query = config.query || `SELECT FROM ${config.class} `;
+          var query = config.query || `SELECT FROM ${config.class} `
           if (config.incrementingField) {
             if (state.hasOwnProperty('progress')) {
               query = query + `WHERE ${config.incrementingField} > ${utils.encode(state.progress)} `
@@ -83,10 +80,9 @@ const orientdbOutput = (_config) => {
         }
 
         return Observable.create((observer) => {
-          const cache = [];
-          var abort = false;
-          var saveTimer;
-          var onLiveRecord = (val) => cache.push(val);
+          const cache = []
+          var abort = false
+          var onLiveRecord = (val) => cache.push(val)
 
           const fixLiveRecord = (val) => Object.assign({},
             val.content,
@@ -94,68 +90,61 @@ const orientdbOutput = (_config) => {
               '@rid': RecordID(`#${val.cluster}:${val.position}`),
               '@version': val.version
             }
-          );
+          )
 
           const liveQuery = db.liveQuery(
-            config.query ? `LIVE ${config.query}` :
-            `LIVE SELECT FROM ${config.class}`
+            config.query ? `LIVE ${config.query}`
+            : `LIVE SELECT FROM ${config.class}`
           )
             .on('live-insert', (v) => onLiveRecord(fixLiveRecord(v)))
-            .on('live-update', (v) => onLiveRecord(fixLiveRecord(v)));
+            .on('live-update', (v) => onLiveRecord(fixLiveRecord(v)))
 
-          const next = observer.next.bind(observer);
-
-          var lastState;
+          const next = observer.next.bind(observer)
 
           const onProgress = (val) => {
-            const newProgress = val[config.incrementingField];
+            const newProgress = val[config.incrementingField]
             if (!state.progress || newProgress > state.progress) {
-              state.progress = val[config.incrementingField];
+              state.progress = val[config.incrementingField]
             }
-            stateProvider.put(state);
+            stateProvider.put(state)
           }
 
           const doInitial = (skip) =>
             batchRead(skip || 0)
               .then((results) => {
-                if (results.length) {
-                  results.forEach((val) => {onProgress(val); next(val)})
-                  return doInitial((skip||0) + results.length);
+                if (!abort && results.length) {
+                  results.forEach((val) => { onProgress(val); next(val) })
+                  return doInitial((skip || 0) + results.length)
                 } else {
-                  return null;
+                  return null
                 }
               })
 
           const flushCache = () => {
             cache
               .filter((val) => val[config.incrementingField] > state.progress)
-              .forEach((val) => {onProgress(val); next(val)})
+              .forEach((val) => { onProgress(val); next(val) })
           }
 
           const goLive = () => {
-            onLiveRecord = (val) => {onProgress(val); next(val)}
+            onLiveRecord = (val) => { onProgress(val); next(val) }
           }
 
           doInitial()
           .then(flushCache)
           .then(goLive)
           .catch((err) => {
-            console.error(err);
-            process.exit(1);
+            console.error(err)
+            process.exit(1)
           })
 
-
           return () => {
-            abort = true;
-            liveQuery.close();
+            abort = true
+            liveQuery.close()
           }
         })
-      });
-
-
-
-  });
-
+      })
+  })
 }
 
-module.exports = orientdbOutput;
+module.exports = orientdbOutput
