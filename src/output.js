@@ -35,7 +35,8 @@ const decorateObject = (config, obj) => _.defaultsDeep({},
 
 const jsonCodec = (config, observer) => ({
   next: (val) => observer.next(
-    typeof val === 'object' ? JSON.stringify(decorateObject(config, val)) : val
+    Array.isArray(val) ? val
+    : typeof val === 'object' ? JSON.stringify(decorateObject(config, val)) : val
   ),
   error: (err) => observer.error(err),
   complete: () => observer.complete()

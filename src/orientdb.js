@@ -78,15 +78,10 @@ const orientdbProvider = (_config) => {
 
     const gremlin = function (query) {
       if (Array.isArray(query)) return gremlin(gremlinTemplate.apply(this, arguments))
-      console.info('')
-      console.info(query)
       return command('gremlin', query)
     }
 
     const sqlQuery = (query, opts) => {
-      console.info('')
-      console.info(query)
-      console.info(JSON.stringify(opts, null, 2))
       return db.query(query, opts)
     }
 
