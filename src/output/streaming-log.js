@@ -16,7 +16,7 @@ const createStreamingLogOutput = (config) => {
   })
   const publisher = client.publish(config.topic, stream)
   publisher.on('error', (err) => {
-    console.error(err)
+    console.error('StreamingLog Output Error: ', err)
     process.exit(1)
   })
   return subject
