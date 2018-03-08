@@ -3,5 +3,7 @@ module.exports = {
   pubSub: require('./src/pub-sub'),
   input: require('./src/input'),
   output: require('./src/output'),
-  state: require('./src/state')
+  state: require('./src/state'),
+  gremlin: require('./src/gremlin'),
+  orientdb: require('./src/orientdb')
 };

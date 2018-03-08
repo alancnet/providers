@@ -9,7 +9,7 @@ const stdin = (config) => Observable.create((observer) => {
   });
 
   rl.on('line', (line) => observer.next(line));
-  rl.on('end', () => observer.complete());
+  rl.on('close', () => observer.complete());
   return () => rl.close()
 });
 

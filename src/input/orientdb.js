@@ -1,5 +1,5 @@
 const _ = require('lodash');
-const { ODatabase, utils } = require('orientjs');
+const { ODatabase, utils, RecordID } = require('orientjs');
 const { Observable } = require('rxjs');
 
 const orientdbOutput = (_config) => {
@@ -60,7 +60,7 @@ const orientdbOutput = (_config) => {
     return stateProvider.get().catch(() => ({}))
       .then((state) => {
         const batchRead = (skip) => {
-          var query = `SELECT * FROM ${config.class} `;
+          var query = config.query || `SELECT FROM ${config.class} `;
           if (config.incrementingField) {
             if (state.hasOwnProperty('progress')) {
               query = query + `WHERE ${config.incrementingField} > ${utils.encode(state.progress)} `
@@ -88,9 +88,20 @@ const orientdbOutput = (_config) => {
           var saveTimer;
           var onLiveRecord = (val) => cache.push(val);
 
-          const liveQuery = db.liveQuery(`LIVE SELECT FROM ${config.class}`)
-            .on('live-insert', (v) => onLiveRecord(v.content))
-            .on('live-update', (v) => onLiveRecord(v.content));
+          const fixLiveRecord = (val) => Object.assign({},
+            val.content,
+            {
+              '@rid': RecordID(`#${val.cluster}:${val.position}`),
+              '@version': val.version
+            }
+          );
+
+          const liveQuery = db.liveQuery(
+            config.query ? `LIVE ${config.query}` :
+            `LIVE SELECT FROM ${config.class}`
+          )
+            .on('live-insert', (v) => onLiveRecord(fixLiveRecord(v)))
+            .on('live-update', (v) => onLiveRecord(fixLiveRecord(v)));
 
           const next = observer.next.bind(observer);
 

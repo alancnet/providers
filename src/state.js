@@ -13,16 +13,41 @@ const state = (_config) => {
     interval: 1000
   });
   return getStateProvider(config).then((provider) => {
-    const input = new Subject();
+    // const input = new Subject();
+    //
+    // input.sampleTime(config.interval).subscribe((val) => provider.put(val));
 
-    input.sampleTime(config.interval).subscribe((val) => provider.put(val));
+    var timer = null;
+    var state = null;
+
+    const check = () => {
+      if (state) {
+        provider.put(state)
+          .then(() => timer = setTimeout(check, config.interval));
+        state = null;
+      } else {
+        timer = null;
+      }
+    }
+
+    const onNewState = (newState) => {
+      state = newState;
+      if (!timer) {
+        // Save immediately because enough time elapsed without a new state
+        // to expire the timer.
+        timer = -1; // prevent simultaneous instant saves
+        provider.put(newState)
+          .then(() => timer = setTimeout(check, config.interval));
+      }
+    }
 
     var latest;
 
     return {
       put: (val) => {
         latest = val;
-        return provider.put(val);
+        onNewState(val);
+        return Promise.resolve(val);
       },
       get: () => {
         if (latest !== undefined) return Promise.resolve(latest);
@@ -30,6 +55,10 @@ const state = (_config) => {
       }
     };
   })
+    .then((stateProvider) =>
+      stateProvider.get().catch(() => ({})).then((initialState) =>
+      Object.assign(stateProvider, {initialState})
+    ))
 }
 
 module.exports = state;
