@@ -15,19 +15,20 @@ const createStreamingLogInput = (_config) => {
   const client = createStreamingLogClient(config.url)
   const offsetQueue = []
   return providers.state(config.state).then((state) => {
+    const currentState = state.initialState
     const ret = Observable.from(topics)
       .flatMap((topicName) =>
         client.subscribe(topicName, {
           retryOnError: config.retryOnError,
           retryInterval: config.retryInterval,
           encoding: config.encoding,
-          offset: state.initialState.offset || 0,
+          offset: currentState[topicName] || 0,
           pollTimeout: config.pollTimeout,
           requestTimeout: config.requestTimeout,
           pageSize: config.pageSize
         })
           .map((message) => {
-            offsetQueue.push(message.offset)
+            offsetQueue.push({topic: topicName, offset: message.offset})
             return config.mode === 'object'
             ? Object.assign({}, message, {topic: topicName})
             : message.value
@@ -38,7 +39,9 @@ const createStreamingLogInput = (_config) => {
         console.error('More acks than inputs')
         process.exit(1)
       } else {
-        state.put({offset: offsetQueue.shift() + 1})
+        const offset = offsetQueue.shift()
+        currentState[offset.topic] = offset.offset + 1
+        state.put(currentState)
       }
     }
     return ret
