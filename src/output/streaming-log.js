@@ -1,11 +1,11 @@
-const { createStreamingLogClient } = require('streaming-log-client')
+const Client = require('streaming-log-client')
 const { Subject } = require('rxjs')
 
 const createStreamingLogOutput = (config) => {
   if (!config.url) throw new Error('StreamingLog requires url')
   if (!config.topic) throw new Error('StreamingLog requires topic')
 
-  const client = createStreamingLogClient(config.url)
+  const client = Client(config.url)
   const subject = new Subject()
   const stream = subject.map((val) => {
     if (!(val instanceof Buffer) && typeof val === 'object') {

@@ -1,5 +1,5 @@
 const _ = require('lodash')
-const { createStreamingLogClient } = require('streaming-log-client')
+const Client = require('streaming-log-client')
 const { Observable } = require('rxjs')
 
 const createStreamingLogInput = (_config) => {
@@ -12,7 +12,7 @@ const createStreamingLogInput = (_config) => {
   if (!config.state) throw new Error('StreamingLog requires state')
 
   const topics = config.topics ? config.topics.split(',') : [config.topic]
-  const client = createStreamingLogClient(config.url)
+  const client = new Client(config.url)
   const offsetQueue = []
   return providers.state(config.state).then((state) => {
     const currentState = state.initialState
