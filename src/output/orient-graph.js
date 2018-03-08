@@ -226,7 +226,7 @@ const orientGraphOutput = (_config) => {
     return {
       next: (val) => {
         const arr = Array.isArray(val) ? val : [val]
-        arr.forEach((val) => queue.push(Object.assign({}, val)))
+        arr.forEach((val) => queue.push(val))
         checkQueue()
       },
       error: (err) => {
