@@ -15,6 +15,31 @@ const orientdbOutput = (_config) => {
   if (!config.password) throw new Error('orientdb requires password')
   if (!config.database) throw new Error('orientdb requires database')
 
+  // const server = OrientDB({
+  //   host: config.host,
+  //   port: config.port,
+  //   username: config.username,
+  //   password: config.password,
+  //   logger: {
+  //     log: (msg) => console.log('LOG', msg),
+  //     debug: (msg) => console.log('DEBUG', msg),
+  //     error: (err) => console.error('CAUGHT', err)
+  //   }
+  //
+  // })
+  //
+  // const db = server.use({
+  //   name: config.database,
+  //   username: config.username,
+  //   password: config.password,
+  //   logger: {
+  //     log: (msg) => console.log('LOG', msg),
+  //     debug: (msg) => console.log('DEBUG', msg),
+  //     error: (err) => console.error('CAUGHT', err)
+  //   }
+  //
+  // })
+
   const db = new ODatabase({
     host: config.host,
     port: config.port,
@@ -79,6 +104,10 @@ const orientdbOutput = (_config) => {
       db.close()
     }
   }))
+  .catch((err) => {
+    console.error(err)
+    process.exit(1)
+  })
 }
 
 module.exports = orientdbOutput

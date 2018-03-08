@@ -241,6 +241,10 @@ const orientGraphOutput = (_config) => {
       done
     }
   })
+  .catch((err) => {
+    console.error(err)
+    process.exit(1)
+  })
 }
 
 module.exports = orientGraphOutput
