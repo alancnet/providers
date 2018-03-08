@@ -4,7 +4,8 @@ const googleCloudStorage = require('@google-cloud/storage')
 const googleCloudStorageDriver = (config) => {
   const gcs = googleCloudStorage({
     projectId: config.projectId,
-    keyFilename: config.keyFilename
+    keyFilename: config.keyFilename,
+    credentials: config.credentials
   })
 
   const bucket = config.bucket

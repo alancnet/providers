@@ -1,12 +1,14 @@
 const stdin = require('./input/stdin')
 const tcp = require('./input/tcp')
 const orientdb = require('./input/orientdb')
+const googlePubsub = require('./input/googlePubsub')
 
 const input = (config) => new Promise((resolve, reject) =>
   !config ? reject('No input config given.')
   : (config.driver === 'stdin') ? resolve(stdin(config))
   : (config.driver === 'tcp') ? resolve(tcp(config))
   : (config.driver === 'orientdb') ? resolve(orientdb(config))
+  : (config.driver === 'googlePubsub') ? resolve(googlePubsub(config))
   : reject(`Unknown input driver ${config.driver}`)
 )
   .then((stream) =>
