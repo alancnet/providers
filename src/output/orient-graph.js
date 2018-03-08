@@ -1,6 +1,7 @@
 const _ = require('lodash')
 const { ODatabase } = require('orientjs')
 const { Subject } = require('rxjs')
+const fifo = require('fifo')
 
 const CLASS = '@class'
 const REF = '@ref'
@@ -37,7 +38,7 @@ const orientGraphOutput = (_config) => {
   // Verify connectivity to database
   return db.class.list().then(() => {
     const refs = {}
-    const queue = []
+    const queue = fifo()
     const done = new Subject()
 
     var processing = false
@@ -224,7 +225,8 @@ const orientGraphOutput = (_config) => {
 
     return {
       next: (val) => {
-        queue.push(Object.assign({}, val))
+        const arr = Array.isArray(val) ? val : [val]
+        arr.forEach((val) => queue.push(Object.assign({}, val)))
         checkQueue()
       },
       error: (err) => {
