@@ -8,7 +8,8 @@ const stdout = (_config) => {
     error: (err) => {
       console.error(err)
       if (!config.continueOnError) process.exit(1)
-    }
+    },
+    complete: () => {}
   }
 }
 
