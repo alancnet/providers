@@ -5,6 +5,7 @@ const orientGraph = require('./output/orient-graph')
 const clock = require('utc-clock')
 const kafka = require('./output/kafka')
 const {createStreamingLogOutput} = require('./output/streaming-log')
+const {createTeeOutput} = require('./output/tee')
 const _ = require('lodash')
 
 const output = (_config) => {
@@ -20,6 +21,7 @@ const output = (_config) => {
     : (config.driver === 'orient-graph') ? resolve(orientGraph(config))
     : (config.driver === 'kafka') ? resolve(kafka(config))
     : (config.driver === 'streamingLog') ? resolve(createStreamingLogOutput(config))
+    : (config.driver === 'tee') ? resolve(createTeeOutput(config))
     : reject(`Unknown output driver ${config.driver}`)
   )
   .then((observer) =>
