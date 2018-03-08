@@ -1,6 +1,6 @@
 {
   "name": "@uei/providers",
-  "version": "0.0.9-SNAPSHOT",
+  "version": "0.0.10-SNAPSHOT",
   "description": "Various cloud service providers as an abstract interface.",
   "main": "index.js",
   "scripts": {
