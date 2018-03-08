@@ -19,7 +19,8 @@ const orientdbOutput = (_config) => {
     port: config.port,
     username: config.username,
     password: config.password,
-    name: config.database
+    name: config.database,
+    upsert: undefined
   });
 
   return (
@@ -30,6 +31,10 @@ const orientdbOutput = (_config) => {
     .then((myClass) => {
       return {
         next: (val) => {
+          if (typeof val !== 'object') {
+            console.error('orientdb requires objects');
+            process.exit(1);
+          }
           if (config.upsert) {
             const upsertCondition = _.pick(val, config.upsert.split(','));
             if (!Object.keys(upsertCondition).length) {
